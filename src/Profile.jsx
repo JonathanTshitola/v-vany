@@ -54,19 +54,18 @@ export default function Profile({ session }) {
     if (error) alert(error.message);
     else {
       setIsEditing(false);
-      alert("Profil mis à jour avec succès !");
+      alert("Votre profil V-VANY a été mis à jour.");
     }
   }
 
-  // Fonction pour supprimer une commande du côté client
   async function deleteOrder(orderId, status) {
     const statusAllowed = ['Livré', 'Annulé', 'Annulé par le client'];
     if (!statusAllowed.includes(status)) {
-      alert("Vous ne pouvez supprimer que les commandes livrées ou annulées.");
+      alert("Impossible : Cette commande est en cours de traitement.");
       return;
     }
 
-    if (confirm("Voulez-vous retirer cette commande de votre historique ?")) {
+    if (confirm("Retirer cette commande de votre historique ?")) {
       const { error } = await supabase.from('orders').delete().eq('id', orderId);
       if (!error) {
         setOrders(orders.filter(o => o.id !== orderId));
@@ -74,104 +73,116 @@ export default function Profile({ session }) {
     }
   }
 
-  if (loading) return <div className="py-20 text-center text-vanyGold animate-pulse">CHARGEMENT DU PROFIL...</div>;
+  if (loading) return <div className="py-40 text-center text-vanyGold font-serif uppercase tracking-[0.3em] animate-pulse">Signature V-VANY...</div>;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10 animate-fadeIn space-y-12">
+    <div className="max-w-4xl mx-auto px-4 py-10 animate-fadeIn space-y-16">
       
-      {/* SECTION IDENTITÉ */}
-      <section className="bg-zinc-900 border border-zinc-800 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-8">
-           <span className="text-[10px] text-vanyGold font-black tracking-[0.3em] uppercase">V-VANY Privilège</span>
+      {/* --- CARTE D'IDENTITÉ LUXE --- */}
+      <section className="bg-zinc-900 border border-zinc-800 p-8 md:p-12 rounded-[3rem] shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-8 opacity-20">
+           <span className="text-[40px] font-serif italic text-vanyGold">V</span>
         </div>
 
-        <h2 className="text-white font-serif text-2xl uppercase tracking-widest mb-8 italic">Mon Profil</h2>
+        <h2 className="text-white font-serif text-3xl uppercase tracking-widest mb-10 italic">Mon Compte</h2>
         
         {!isEditing ? (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div>
-                <p className="text-zinc-500 text-[9px] uppercase font-black tracking-widest mb-1">Nom Complet</p>
-                <p className="text-white text-sm font-bold uppercase">{fullName || 'Non renseigné'}</p>
-              </div>
-              <div>
-                <p className="text-zinc-500 text-[9px] uppercase font-black tracking-widest mb-1">Contact WhatsApp</p>
-                <p className="text-white text-sm font-bold">{phone || 'Non renseigné'}</p>
-              </div>
-              <div className="md:col-span-2">
-                <p className="text-zinc-500 text-[9px] uppercase font-black tracking-widest mb-1">Adresse de livraison</p>
-                <p className="text-white text-sm font-bold uppercase">{address || 'Non renseignée'}</p>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-10 gap-x-12">
+            <div className="space-y-1">
+              <p className="text-zinc-500 text-[9px] uppercase font-black tracking-widest">Membre</p>
+              <p className="text-white text-lg font-bold uppercase tracking-tighter">{fullName || 'Invité V-VANY'}</p>
             </div>
-            <button 
-              onClick={() => setIsEditing(true)}
-              className="mt-6 text-vanyGold border-b border-vanyGold pb-1 text-[10px] font-black uppercase tracking-widest hover:text-white hover:border-white transition-all"
-            >
-              Modifier mes informations
+            <div className="space-y-1">
+              <p className="text-zinc-500 text-[9px] uppercase font-black tracking-widest">Ligne Directe</p>
+              <p className="text-vanyGold text-lg font-bold italic">{phone || 'Non renseigné'}</p>
+            </div>
+            <div className="md:col-span-2 space-y-1">
+              <p className="text-zinc-500 text-[9px] uppercase font-black tracking-widest">Résidence de livraison</p>
+              <p className="text-zinc-300 text-sm font-medium leading-relaxed uppercase">{address || 'Aucune adresse enregistrée'}</p>
+            </div>
+            <button onClick={() => setIsEditing(true)} className="w-fit text-vanyGold border-b border-vanyGold/30 pb-1 text-[10px] font-black uppercase tracking-widest hover:border-vanyGold transition-all mt-4">
+              Modifier le profil
             </button>
           </div>
         ) : (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input type="text" placeholder="NOM COMPLET" value={fullName} onChange={(e) => setFullName(e.target.value)} className="bg-black border border-zinc-800 p-4 rounded-xl text-white text-xs outline-none focus:border-vanyGold" />
-              <input type="text" placeholder="TÉLÉPHONE" value={phone} onChange={(e) => setPhone(e.target.value)} className="bg-black border border-zinc-800 p-4 rounded-xl text-white text-xs outline-none focus:border-vanyGold" />
-              <input type="text" placeholder="ADRESSE COMPLETE" value={address} onChange={(e) => setAddress(e.target.value)} className="bg-black border border-zinc-800 p-4 rounded-xl text-white text-xs outline-none focus:border-vanyGold md:col-span-2" />
+              <input type="text" placeholder="NOM COMPLET" value={fullName} onChange={(e) => setFullName(e.target.value)} className="bg-black border border-zinc-800 p-5 rounded-2xl text-white text-xs outline-none focus:border-vanyGold transition-all" />
+              <input type="text" placeholder="TÉLÉPHONE (WHATSAPP)" value={phone} onChange={(e) => setPhone(e.target.value)} className="bg-black border border-zinc-800 p-5 rounded-2xl text-white text-xs outline-none focus:border-vanyGold" />
+              <textarea placeholder="ADRESSE COMPLÈTE" value={address} onChange={(e) => setAddress(e.target.value)} className="bg-black border border-zinc-800 p-5 rounded-2xl text-white text-xs outline-none focus:border-vanyGold md:col-span-2 h-32" />
             </div>
-            <div className="flex gap-4">
-              <button onClick={updateProfile} className="bg-white text-black font-black text-[10px] uppercase tracking-widest px-8 py-3 rounded-full hover:bg-vanyGold transition-all">Enregistrer</button>
-              <button onClick={() => setIsEditing(false)} className="text-zinc-500 text-[10px] uppercase font-black tracking-widest px-4">Annuler</button>
+            <div className="flex gap-4 pt-4">
+              <button onClick={updateProfile} className="bg-white text-black font-black text-[10px] uppercase tracking-widest px-10 py-4 rounded-full hover:bg-vanyGold hover:text-white transition-all">Enregistrer</button>
+              <button onClick={() => setIsEditing(false)} className="text-zinc-500 text-[10px] uppercase font-black tracking-widest px-4 hover:text-white transition-all">Annuler</button>
             </div>
           </div>
         )}
       </section>
 
-      {/* SECTION HISTORIQUE */}
+      {/* --- HISTORIQUE DES COMMANDES --- */}
       <section>
-        <div className="flex justify-between items-end mb-8 border-b border-zinc-900 pb-4">
-          <h2 className="text-white font-serif text-xl uppercase tracking-widest italic">Historique des commandes</h2>
-          <span className="text-zinc-600 text-[9px] font-bold uppercase tracking-widest">{orders.length} Réservations</span>
+        <div className="flex justify-between items-end mb-10 border-b border-zinc-900 pb-6">
+          <h2 className="text-white font-serif text-2xl uppercase tracking-[0.2em] italic">Mes Acquisitions</h2>
+          <span className="text-vanyGold text-[10px] font-black uppercase tracking-widest">{orders.length} Articles</span>
         </div>
 
         {orders.length === 0 ? (
-          <div className="py-20 text-center bg-zinc-900/20 rounded-3xl border border-dashed border-zinc-800">
-            <p className="text-zinc-600 text-xs uppercase tracking-widest italic">Aucun achat pour le moment.</p>
+          <div className="py-32 text-center bg-zinc-900/10 rounded-[3rem] border border-dashed border-zinc-800/50">
+            <p className="text-zinc-700 text-xs uppercase tracking-[0.3em] italic font-medium">Votre garde-robe V-VANY est encore vide.</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {orders.map((order) => (
-              <div key={order.id} className="bg-zinc-900/40 border border-zinc-900 p-6 rounded-3xl flex items-center justify-between group hover:border-zinc-700 transition-all">
-                <div className="flex gap-6 items-center">
-                  <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center border border-zinc-700">
-                    <span className="text-vanyGold text-xs italic">V</span>
+              <div key={order.id} className="bg-zinc-900/30 border border-zinc-900 p-8 rounded-[2.5rem] flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-zinc-900/50 transition-all border-l-4 border-l-vanyGold/20">
+                <div className="flex gap-8 items-start">
+                  <div className="hidden sm:flex w-14 h-14 rounded-2xl bg-black border border-zinc-800 items-center justify-center shrink-0 shadow-xl">
+                    <span className="text-vanyGold text-xl font-serif italic">V</span>
                   </div>
-                  <div>
-                    <p className="text-white text-[11px] font-black uppercase tracking-widest mb-1">Commande #{order.id.slice(0, 5)}</p>
-                    <p className="text-zinc-500 text-[9px] uppercase tracking-tighter">
-                      {new Date(order.created_at).toLocaleDateString('fr-FR')} — {order.total_price} $
-                    </p>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-white text-sm font-black uppercase tracking-widest mb-1">Commande #{order.id.slice(0, 5)}</p>
+                      <p className="text-zinc-500 text-[10px] uppercase font-bold tracking-tighter">
+                        {new Date(order.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </p>
+                    </div>
+
+                    {/* DÉTAIL DES ARTICLES DANS LA COMMANDE */}
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      {order.items?.map((item, idx) => (
+                        <div key={idx} className="bg-black/40 border border-zinc-800 px-3 py-2 rounded-xl">
+                          <p className="text-zinc-300 text-[10px] font-bold uppercase">{item.name}</p>
+                          {item.selectedOptions && (
+                            <p className="text-vanyGold text-[8px] font-black uppercase mt-0.5">
+                              {Object.entries(item.selectedOptions).map(([k, v]) => `${k}: ${v}`).join(' | ')}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-6">
-                  {/* Statut avec couleur adaptée au mode sombre */}
-                  <span className={`text-[8px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full border ${
-                    order.status === 'Livré' ? 'border-green-900 text-green-500 bg-green-500/5' :
-                    order.status.includes('Annulé') ? 'border-red-900 text-red-500 bg-red-500/5' :
-                    'border-vanyGold/30 text-vanyGold bg-vanyGold/5'
-                  }`}>
-                    {order.status}
-                  </span>
+                <div className="flex items-center justify-between md:flex-col md:items-end gap-4 border-t border-zinc-800 pt-6 md:border-t-0 md:pt-0">
+                  <p className="text-white font-serif text-2xl italic">{order.total_price} $</p>
+                  
+                  <div className="flex items-center gap-4">
+                    <span className={`text-[9px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full border shadow-sm ${
+                      order.status === 'Livré' ? 'border-green-800/50 text-green-500 bg-green-500/5' :
+                      order.status.includes('Annulé') ? 'border-red-800/50 text-red-500 bg-red-500/5' :
+                      'border-vanyGold/30 text-vanyGold bg-vanyGold/5'
+                    }`}>
+                      {order.status}
+                    </span>
 
-                  {/* Bouton supprimer (uniquement si fini ou annulé) */}
-                  {(order.status === 'Livré' || order.status.includes('Annulé')) && (
-                    <button 
-                      onClick={() => deleteOrder(order.id, order.status)}
-                      className="text-zinc-700 hover:text-red-500 transition-colors p-2"
-                      title="Supprimer de l'historique"
-                    >
-                      <span className="text-sm">✕</span>
-                    </button>
-                  )}
+                    {(order.status === 'Livré' || order.status.includes('Annulé')) && (
+                      <button 
+                        onClick={() => deleteOrder(order.id, order.status)}
+                        className="w-8 h-8 rounded-full bg-zinc-800/50 flex items-center justify-center text-zinc-500 hover:text-red-500 hover:bg-red-500/10 transition-all"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
