@@ -105,7 +105,7 @@ export default function App() {
                 <button onClick={handleLogout} className="text-red-600 hover:text-red-400 font-black italic">Quitter</button>
               </>
             ) : (
-              <button onClick={() => setView('login')} className={view === 'login' ? 'text-vanyGold' : 'text-zinc-400 hover:text-white'}>Espace Privé</button>
+              <button onClick={() => setView('login')} className={view === 'login' ? 'text-vanyGold' : 'text-zinc-400 hover:text-white'}>Se connecter</button>
             )}
           </nav>
         </div>
