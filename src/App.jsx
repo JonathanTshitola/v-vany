@@ -8,38 +8,52 @@ import Cart from './Cart';
 
 export default function App() {
   const [session, setSession] = useState(null);
-  const [view, setView] = useState('shop'); // Par défaut sur la boutique
+  const [view, setView] = useState('shop'); 
   const [cart, setCart] = useState([]);
+  const [userRole, setUserRole] = useState('client'); // État pour stocker le rôle
 
   useEffect(() => {
-    // Récupérer la session actuelle
+    // 1. Récupérer la session et le rôle au démarrage
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      if (session) fetchUserRole(session.user.id);
     });
 
-    // Écouter les changements (Connexion / Déconnexion)
+    // 2. Écouter les changements (Connexion / Déconnexion)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      
-      // RÉGLAGE : À chaque changement d'état (login ou logout), 
-      // on redirige automatiquement vers la boutique
+      if (session) {
+        fetchUserRole(session.user.id);
+      } else {
+        setUserRole('client');
+      }
       setView('shop'); 
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  // Fonction de déconnexion manuelle propre
+  // Fonction pour aller chercher le rôle "admin" ou "client" dans la table profiles
+  async function fetchUserRole(userId) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single();
+    
+    if (data) setUserRole(data.role);
+  }
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    setView('shop'); // Redirection forcée au cas où
+    setUserRole('client');
+    setView('shop');
   };
 
   return (
     <div className="min-h-screen bg-black text-white selection:bg-vanyGold selection:text-black font-sans">
       <header className="py-10 border-b border-zinc-900 sticky top-0 z-50 bg-black/95 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-4 flex flex-col items-center">
-          {/* Logo cliquable pour revenir à la boutique */}
           <h1 
             className="text-5xl font-serif font-black tracking-[0.5em] mb-8 text-white cursor-pointer hover:text-vanyGold transition-colors"
             onClick={() => setView('shop')}
@@ -56,7 +70,12 @@ export default function App() {
             {session ? (
               <>
                 <button onClick={() => setView('profile')} className={view === 'profile' ? 'text-vanyGold' : 'text-zinc-400 hover:text-white'}>Profil</button>
-                <button onClick={() => setView('admin')} className={view === 'admin' ? 'text-vanyGold' : 'text-zinc-400 hover:text-white'}>Admin</button>
+                
+                {/* LE BOUTON ADMIN EST MAINTENANT SÉCURISÉ ICI */}
+                {userRole === 'admin' && (
+                  <button onClick={() => setView('admin')} className={view === 'admin' ? 'text-vanyGold' : 'text-zinc-400 hover:text-white'}>Admin</button>
+                )}
+                
                 <button onClick={handleLogout} className="text-red-600 hover:text-red-400 font-black italic">Quitter</button>
               </>
             ) : (
@@ -71,7 +90,8 @@ export default function App() {
         {view === 'cart' && <Cart cart={cart} setCart={setCart} session={session} setView={setView} />}
         {view === 'login' && <Auth />}
         {view === 'profile' && session && <Profile session={session} />}
-        {view === 'admin' && session && <Admin />}
+        {/* SÉCURITÉ SUPPLÉMENTAIRE : On passe la session au composant Admin */}
+        {view === 'admin' && session && userRole === 'admin' && <Admin session={session} />}
       </main>
 
       <footer className="py-20 border-t border-zinc-900 text-center opacity-30">
