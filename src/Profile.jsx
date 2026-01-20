@@ -52,7 +52,7 @@ export default function Profile({ session }) {
         </div>
 
         <h2 className="text-2xl font-serif font-black tracking-[0.3em] uppercase text-white mb-10 border-b border-zinc-800 pb-6">
-          Votre Espace Privé
+          Se connecter
         </h2>
 
         <div className="space-y-8">
@@ -104,7 +104,7 @@ export default function Profile({ session }) {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] text-vanyGold font-black uppercase tracking-widest ml-1">Adresse</label>
+                <label className="text-[10px] text-vanyGold font-black uppercase tracking-widest ml-1">Adresse livraison</label>
                 <input 
                   type="text" value={address} onChange={(e) => setAddress(e.target.value)}
                   className="w-full bg-black border border-zinc-700 p-4 rounded-xl text-white font-bold outline-none focus:border-vanyGold"

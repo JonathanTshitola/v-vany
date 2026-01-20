@@ -10,14 +10,17 @@ export default function App() {
   const [session, setSession] = useState(null);
   const [view, setView] = useState('shop'); 
   const [cart, setCart] = useState([]);
-  const [userRole, setUserRole] = useState(null); // Changement ici : null au début
+  const [userRole, setUserRole] = useState(null);
+  const [hasNewOrder, setHasNewOrder] = useState(false); // État pour la notification
 
   useEffect(() => {
+    // 1. Gestion de la session initiale
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) fetchUserRole(session.user.id);
     });
 
+    // 2. Écouteur de changement d'état (connexion/déconnexion)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
@@ -30,6 +33,27 @@ export default function App() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // 3. Écouteur Temps Réel pour les commandes (uniquement pour l'admin)
+  useEffect(() => {
+    if (userRole === 'admin') {
+      const channels = supabase.channel('order-notifications')
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'orders' },
+          (payload) => {
+            setHasNewOrder(true);
+            // Petit son discret de notification
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
+            audio.volume = 0.5;
+            audio.play().catch(e => console.log("Audio bloqué par le navigateur"));
+          }
+        )
+        .subscribe();
+
+      return () => { supabase.removeChannel(channels); };
+    }
+  }, [userRole]);
 
   async function fetchUserRole(userId) {
     const { data } = await supabase
@@ -61,10 +85,23 @@ export default function App() {
             {session ? (
               <>
                 <button onClick={() => setView('profile')} className={view === 'profile' ? 'text-vanyGold' : 'text-zinc-400 hover:text-white'}>Profil</button>
-                {/* Le bouton Admin ne s'affiche QUE si userRole est exactement 'admin' */}
+                
                 {userRole === 'admin' && (
-                  <button onClick={() => setView('admin')} className={view === 'admin' ? 'text-vanyGold' : 'text-zinc-400 hover:text-white'}>Admin</button>
+                  <button 
+                    onClick={() => { setView('admin'); setHasNewOrder(false); }} 
+                    className={`relative transition-all ${view === 'admin' ? 'text-vanyGold' : 'text-zinc-400 hover:text-white'}`}
+                  >
+                    Admin
+                    {/* PASTILLE DE NOTIFICATION */}
+                    {hasNewOrder && (
+                      <span className="absolute -top-1 -right-2 flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-vanyGold opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-vanyGold"></span>
+                      </span>
+                    )}
+                  </button>
                 )}
+                
                 <button onClick={handleLogout} className="text-red-600 hover:text-red-400 font-black italic">Quitter</button>
               </>
             ) : (
@@ -80,7 +117,6 @@ export default function App() {
         {view === 'login' && <Auth />}
         {view === 'profile' && session && <Profile session={session} />}
         
-        {/* PROTECTION STRICTE : Si l'utilisateur force la vue 'admin' mais n'est pas admin */}
         {view === 'admin' && (
           session && userRole === 'admin' ? (
             <Admin session={session} />

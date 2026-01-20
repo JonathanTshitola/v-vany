@@ -3,7 +3,7 @@ import { supabase } from './supabaseClient';
 
 export default function Cart({ cart, setCart, session, setView }) {
   const [ordered, setOrdered] = useState(false);
-  const [lastOrderId, setLastOrderId] = useState(null); // Pour pouvoir annuler la commande précise
+  const [lastOrderId, setLastOrderId] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   
@@ -15,45 +15,48 @@ export default function Cart({ cart, setCart, session, setView }) {
     setIsProcessing(true);
 
     try {
+      // AJOUT : On inclut customer_email pour l'affichage Admin
       const { data, error } = await supabase.from('orders').insert([{
         user_id: session.user.id,
+        customer_email: session.user.email, // Important pour l'Admin !
         total_price: total,
         items: cart,
-        status: 'En attente de paiement'
+        status: 'En attente'
       }]).select();
 
       if (!error) {
         setLastOrderId(data[0].id);
         setOrdered(true);
         setShowConfirmModal(true);
+      } else {
+        throw error;
       }
     } catch (err) {
-      alert("Une erreur est survenue lors de la réservation.");
+      alert("Erreur lors de la réservation : " + err.message);
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // Étape : Annuler la commande et retourner boutique
+  // Annuler la commande (si l'utilisateur change d'avis sur l'écran final)
   const cancelOrder = async () => {
     if (lastOrderId) {
-      // On supprime la commande de la base de données pour ne pas fausser ton stock/admin
       await supabase.from('orders').delete().eq('id', lastOrderId);
     }
-    // On réinitialise les états et on redirige
     setOrdered(false);
     setLastOrderId(null);
     setView('shop');
   };
 
   const redirectToWhatsApp = () => {
-    const msg = `✨ RÉSERVATION V-VANY ✨\n\nJ'ai bien pris note des instructions de paiement pour ma commande de ${total}$.\n\nJe vous envoie ma preuve de transfert dans un instant pour valider l'expédition.`;
-    window.open(`https://wa.me/243XXXXXXXXX?text=${encodeURIComponent(msg)}`, '_blank');
+    // Remplace les XXXXXXXXX par ton numéro de téléphone réel
+    const msg = `✨ RÉSERVATION V-VANY ✨\n\nJ'ai effectué une commande de ${total}$.\n\nID Commande : ${lastOrderId}\n\nJe vous envoie ma preuve de paiement pour valider l'expédition.`;
+    window.open(`https://wa.me/243977098016?text=${encodeURIComponent(msg)}`, '_blank');
     setShowConfirmModal(false);
-    setCart([]); // On vide le panier seulement si l'utilisateur confirme l'envoi WhatsApp
+    setCart([]); // On vide le panier seulement ici
   };
 
-  // --- ÉCRAN DE SUCCÈS & PAIEMENT ---
+  // --- ÉCRAN DE SUCCÈS (Le même que le tien, avec le bouton annuler) ---
   if (ordered) return (
     <div className="max-w-2xl mx-auto px-4 py-10 animate-fadeIn">
       <div className="text-center mb-12">
@@ -77,26 +80,20 @@ export default function Cart({ cart, setCart, session, setView }) {
             onClick={() => setShowConfirmModal(true)}
             className="w-full bg-white text-black py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-vanyGold hover:text-white transition-all shadow-xl"
           >
-            Envoyer ma preuve de paiement
+            Notifier le service client
           </button>
-
-          {/* BOUTON ANNULER ET RETOUR */}
-          <button 
-            onClick={cancelOrder}
-            className="w-full bg-transparent text-zinc-500 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:text-red-500 transition-colors"
-          >
-            Annuler et retourner à la boutique
+          <button onClick={cancelOrder} className="w-full text-zinc-500 text-[10px] uppercase font-bold tracking-widest">
+            Annuler la commande
           </button>
         </div>
       </div>
 
-      {/* MODALE DE CONFIRMATION WHATSAPP */}
       {showConfirmModal && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 backdrop-blur-md bg-black/80 animate-fadeIn text-center">
           <div className="bg-zinc-900 border border-zinc-700 w-full max-w-sm rounded-[2.5rem] p-10 shadow-2xl">
             <h4 className="text-white font-serif font-black uppercase tracking-widest mb-4 italic">V-VANY Concierge</h4>
             <p className="text-zinc-400 text-[11px] mb-8 leading-relaxed">
-              Souhaitez-vous notifier notre service client sur WhatsApp pour valider votre commande et l'expédition ?
+              Souhaitez-vous envoyer votre preuve de paiement sur WhatsApp maintenant ?
             </p>
             <div className="flex flex-col gap-3">
               <button onClick={redirectToWhatsApp} className="w-full bg-[#25D366] text-white py-4 rounded-xl font-black text-[11px] uppercase tracking-widest shadow-lg">Ouvrir WhatsApp</button>
@@ -108,11 +105,10 @@ export default function Cart({ cart, setCart, session, setView }) {
     </div>
   );
 
-  // --- AFFICHAGE DU PANIER CLASSIQUE ---
+  // --- RENDU DU PANIER CLASSIQUE ---
   return (
     <div className="max-w-5xl mx-auto px-4 animate-fadeIn">
       <h2 className="text-3xl font-serif font-black text-white uppercase tracking-[0.4em] mb-12 text-center">Votre Bag</h2>
-
       {cart.length === 0 ? (
         <div className="text-center py-24 border border-zinc-900 rounded-[3rem] bg-zinc-900/10">
           <p className="text-zinc-600 font-serif italic text-xl mb-8">Votre sélection est vide.</p>
@@ -132,7 +128,6 @@ export default function Cart({ cart, setCart, session, setView }) {
               </div>
             ))}
           </div>
-
           <div className="lg:col-span-1">
             <div className="bg-white p-8 rounded-[2.5rem] sticky top-32 text-black shadow-2xl">
               <h3 className="font-black uppercase text-[10px] tracking-widest mb-8 border-b border-black/10 pb-4 text-center">Résumé</h3>
