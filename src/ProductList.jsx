@@ -1,6 +1,16 @@
 import { useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
 
+// On définit les couleurs pour faire correspondre les noms aux pastilles visuelles
+const PRESET_COLORS = [
+  { name: 'Noir', hex: '#000000' },
+  { name: 'Brun', hex: '#4B3621' },
+  { name: 'Blond', hex: '#faf0be' },
+  { name: 'Or', hex: '#D4AF37' },
+  { name: 'Rouge', hex: '#8B0000' },
+  { name: 'Bleu Nuit', hex: '#000080' }
+];
+
 export default function ProductList({ cart, setCart }) {
   const [products, setProducts] = useState([]);
   const [filtered, setFiltered] = useState([]);
@@ -40,7 +50,6 @@ export default function ProductList({ cart, setCart }) {
         return;
       }
       
-      // Ajout au panier avec clé unique pour différencier les mêmes produits de tailles différentes
       const uniqueId = `${product.id}-${Object.values(choices).join('-')}`;
       setCart([...cart, { ...product, cartItemId: uniqueId, selectedOptions: choices }]);
     } else {
@@ -107,15 +116,44 @@ export default function ProductList({ cart, setCart }) {
               <p className="text-[9px] text-vanyGold uppercase font-black tracking-[0.3em] italic opacity-80">{product.category}</p>
               <h3 className="text-lg font-serif uppercase tracking-[0.1em] text-white italic">{product.name}</h3>
               
-              {/* SÉLECTEUR DE VARIANTES */}
+              {/* SÉLECTEUR DE VARIANTES LUXE */}
               {product.variants && product.variants.length > 0 && product.stock > 0 && (
-                <div className="py-2 space-y-4">
+                <div className="py-4 space-y-6">
                   {product.variants.map((v, idx) => (
-                    <div key={idx} className="space-y-2">
-                      <p className="text-zinc-600 text-[8px] font-black uppercase tracking-widest italic">Sélectionner {v.type}</p>
-                      <div className="flex flex-wrap justify-center gap-2">
+                    <div key={idx} className="space-y-3">
+                      <p className="text-zinc-600 text-[8px] font-black uppercase tracking-widest italic text-center">
+                        {v.type === 'Taille' && product.category === 'Chaussures' ? 'Sélectionner Pointure' : `Choisir ${v.type}`}
+                      </p>
+                      <div className="flex flex-wrap justify-center gap-3">
                         {v.options.map(opt => {
                           const isSelected = selectedVariants[product.id]?.[v.type] === opt;
+                          
+                          // RENDU POUR LES COULEURS
+                          if (v.type === 'Couleur') {
+                            const colorData = PRESET_COLORS.find(c => c.name === opt);
+                            return (
+                              <button
+                                key={opt}
+                                onClick={() => setSelectedVariants({
+                                  ...selectedVariants,
+                                  [product.id]: { ...selectedVariants[product.id], [v.type]: opt }
+                                })}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 ${
+                                  isSelected ? 'border-vanyGold bg-vanyGold/5' : 'border-zinc-800'
+                                }`}
+                              >
+                                <div 
+                                  className="w-3 h-3 rounded-full border border-white/10" 
+                                  style={{ backgroundColor: colorData?.hex || '#333' }} 
+                                />
+                                <span className={`text-[9px] font-bold uppercase ${isSelected ? 'text-white' : 'text-zinc-500'}`}>
+                                  {opt}
+                                </span>
+                              </button>
+                            );
+                          }
+
+                          // RENDU POUR LES TAILLES / POINTURES
                           return (
                             <button
                               key={opt}
@@ -123,10 +161,10 @@ export default function ProductList({ cart, setCart }) {
                                 ...selectedVariants,
                                 [product.id]: { ...selectedVariants[product.id], [v.type]: opt }
                               })}
-                              className={`px-4 py-1.5 text-[9px] font-bold border rounded-full transition-all duration-300 ${
+                              className={`w-11 h-11 flex items-center justify-center rounded-xl border text-[10px] font-black transition-all duration-500 ${
                                 isSelected
-                                ? 'bg-white text-black border-white'
-                                : 'bg-transparent border-zinc-800 text-zinc-500 hover:border-zinc-400'
+                                ? 'bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.2)] scale-110'
+                                : 'bg-transparent border-zinc-800 text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
                               }`}
                             >
                               {opt}
@@ -149,10 +187,10 @@ export default function ProductList({ cart, setCart }) {
               <button 
                 onClick={() => handleAddToCart(product)} 
                 disabled={product.stock <= 0}
-                className={`w-full mt-4 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-500 ${
+                className={`w-full mt-4 py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-500 ${
                   product.stock <= 0 
                   ? 'bg-zinc-900 text-zinc-700 cursor-not-allowed border border-zinc-800' 
-                  : 'bg-white text-black hover:bg-vanyGold hover:text-white'
+                  : 'bg-white text-black hover:bg-vanyGold hover:text-white shadow-xl shadow-black/20'
                 }`}
               >
                 {product.stock <= 0 ? "Momentanément indisponible" : "Ajouter à ma sélection"}
