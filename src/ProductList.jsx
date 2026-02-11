@@ -40,16 +40,25 @@ export default function ProductList({ cart, setCart }) {
 
   return (
     <div className="animate-fadeIn pb-20 px-4">
+      {/* BARRE DE RECHERCHE ET CATEGORIES */}
       <div className="flex flex-col items-center mb-20 gap-10">
         <input type="text" placeholder="RECHERCHER DANS L'UNIVERS V-VANY..." value={search} onChange={e=>setSearch(e.target.value)}
           className="w-full max-w-xl bg-zinc-900/40 border border-zinc-800 text-white p-5 rounded-full text-center text-[10px] tracking-[0.3em] outline-none focus:border-vanyGold" />
         <div className="flex flex-wrap justify-center gap-3">
           {categories.map(cat => (
-            <button key={cat} onClick={() => setActiveCat(cat)} className={`text-[9px] font-black uppercase tracking-[0.2em] px-6 py-2.5 rounded-full border transition-all ${activeCat === cat ? 'bg-vanyGold text-white border-vanyGold' : 'text-zinc-500 border-zinc-800 hover:text-white'}`}>{cat}</button>
+            <button key={cat} onClick={() => setActiveCat(cat)} 
+              className={`text-[9px] font-black uppercase tracking-[0.2em] px-6 py-2.5 rounded-full border transition-all duration-300 ${
+                activeCat === cat 
+                ? 'bg-vanyGold text-white border-vanyGold' 
+                : 'text-zinc-500 border-zinc-800 hover:border-white hover:text-white' // Correction ici
+              }`}>
+              {cat}
+            </button>
           ))}
         </div>
       </div>
 
+      {/* GRILLE PRODUITS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-20">
         {filtered.map(product => (
           <div key={product.id} className="group">
@@ -72,7 +81,13 @@ export default function ProductList({ cart, setCart }) {
                       
                       return (
                         <button key={opt} onClick={() => setSelectedVariants({...selectedVariants, [product.id]: {...selectedVariants[product.id], [v.type]: opt}})}
-                          className={`flex items-center justify-center transition-all duration-500 border ${v.type === 'Couleur' ? 'px-4 py-2 rounded-full gap-2' : 'w-11 h-11 rounded-xl'} ${isSelected ? 'bg-white text-black border-white scale-110 shadow-lg' : 'border-zinc-800 text-zinc-600'}`}>
+                          className={`flex items-center justify-center transition-all duration-300 border ${
+                            v.type === 'Couleur' ? 'px-4 py-2 rounded-full gap-2' : 'w-11 h-11 rounded-xl'
+                          } ${
+                            isSelected 
+                            ? 'bg-white text-black border-white scale-110 shadow-lg' 
+                            : 'border-zinc-800 text-zinc-600 hover:border-zinc-400 hover:text-white' // Texte blanc sur bordure grise au survol
+                          }`}>
                           {colorInfo && <div className="w-2 h-2 rounded-full" style={{ backgroundColor: colorInfo.hex }} />}
                           <span className="text-[9px] font-black uppercase">{opt}</span>
                         </button>
@@ -83,7 +98,18 @@ export default function ProductList({ cart, setCart }) {
               ))}
 
               <p className="font-serif text-2xl text-white italic">{product.price} $</p>
-              <button onClick={() => handleAddToCart(product)} disabled={product.stock <= 0} className={`w-full py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] transition-all ${product.stock <= 0 ? 'bg-zinc-900 text-zinc-700 cursor-not-allowed' : 'bg-white text-black hover:bg-vanyGold hover:text-white'}`}>
+              
+              {/* BOUTON AJOUTER - CORRECTION DU CONTRASTE */}
+              <button 
+                onClick={() => handleAddToCart(product)} 
+                disabled={product.stock <= 0} 
+                className={`w-full py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] transition-all duration-500 border ${
+                  product.stock <= 0 
+                  ? 'bg-zinc-900 text-zinc-700 border-zinc-800 cursor-not-allowed' 
+                  : 'bg-white text-black border-white hover:bg-transparent hover:text-vanyGold hover:border-vanyGold' 
+                  // Inversion : Fond blanc -> Fond transparent avec texte & bordure Or
+                }`}
+              >
                 {product.stock <= 0 ? "Indisponible" : "Ajouter au Panier"}
               </button>
             </div>
